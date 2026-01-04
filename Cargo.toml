@@ -1,0 +1,26 @@
+[package]
+name = "cetane"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.70"
+authors = ["tomtomwombat"]
+description = "Fast integer parser."
+license = "MIT OR Apache-2.0"
+homepage = "https://github.com/tomtomwombat/cetane/"
+repository = "https://github.com/tomtomwombat/cetane/"
+keywords = ["integer", "atoi", "parsing", "swar"]
+categories = ["parsing", "encoding", "algorithms"]
+readme = "README.md"
+
+[badges]
+maintenance = { status = "actively-developed" }
+
+[features]
+default = ["std"]
+std = []
+
+[dependencies]
+
+[dev-dependencies]
+itoa = "1.0.17"
+proptest = "1.9.0"

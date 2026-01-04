@@ -1,0 +1,14 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc 0a909d4b7d1ae88d90f4ef31c5016140507e17a1124cf7122021975277f96c34 # shrinks to bytes = [0, 48, 48, 48, 48, 48, 48, 48, 48]
+cc cc2992402cb7cbd4825941afc3dd062c053b47f90fda74422e5a42f912d16b58 # shrinks to s = "20000000000000000000"
+cc 6d0b0c50dd5057b317e0d79bc0869ab6f75b896993abea2f20fba9052417b17c # shrinks to s = "20000000000000000000"
+cc f88d47b47a81618631e2313c3ed89ad746c7a3cf6549bb94e2190f2f3c15a395 # shrinks to s = "20000000000000000000"
+cc b13a96c71056255a8be6b268e466dd6e73ceb617017558a1ade4253dd9cf039f # shrinks to s = ":c  A\u{1a7f}Aa𞸤𝒮0"
+cc 3ed07421ed4265517c37475e80d30306cd945418d83d5a144ac82e803a310330 # shrinks to s = []
+cc 363aced610a754e03cfdd34497bc876bca196473355d2ec5f2bd635190a86f26 # shrinks to s = [227, 74, 0, 48, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+cc 20326fb317455b409954453ae3b1f08c601ba9fe51a4506d40d4110d5180c2af # shrinks to x = 10
