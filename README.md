@@ -6,7 +6,7 @@ This crate is my extension and generalization of the 8-bit int parser explained 
 This crate is a work in progress. I am still tuning, adding broader functionality, and cleaning up the documentation.
 
 # Usage
-```Rust
+```rust
 use cetane::atoi;
 
 let num64 = atoi::<u64>(b"42").unwrap();
@@ -25,7 +25,7 @@ Benchmark source: https://github.com/tomtomwombat/atoi-benchmark.
 cetane's integer parsers are built from composing 4 core parsing functions, `parse_1`, `parse_2`, `parse_4`, and `parse_8`. Each of these functions parse numbers from the range 1-9, 10-99, 100-999, and 1000-9999 respectively.
 
 As an example, here's a walkthrough of `parse_4` applied to `s = b"7852"`:
-```Rust,ignore
+```rust,ignore
 fn parse_4(s: &mut &[u8], is_err: &mut u64) -> u64 {
     let mut u = unsafe { ptr::read_unaligned(s.as_ptr() as *const u32) };
     *s = &s[4..];
@@ -40,7 +40,7 @@ fn parse_4(s: &mut &[u8], is_err: &mut u64) -> u64 {
 #### 1.
 Read 4 bytes of `s` into a `u32` `u` and shifts the `s` pointer by 4.
 Note that first byte in `s` is the least significant  
-```Rust,ignore
+```rust,ignore
 let mut u = unsafe { ptr::read_unaligned(s.as_ptr() as *const u32) };
 *s = &s[4..];
 ```
@@ -115,7 +115,7 @@ We'll complete these operations in two steps:
 2. Compute 100 * 78 + 1 * 52
 
 First, get (10 * 7 + 8) and (5 * 10 + 2):
-```Rust,ignore
+```rust,ignore
 u = (u.wrapping_mul(10 << 8 | 1) >> 8) & 0xff00ff;
 ```
 
@@ -145,7 +145,7 @@ u = (u.wrapping_mul(10 << 8 | 1) >> 8) & 0xff00ff;
 
 
 Then 100 * 78 + 1 * 52:
-```Rust,ignore
+```rust,ignore
 u = u.wrapping_mul(100 << 16 | 1) >> 16;
 ```
 ```ignore
@@ -176,7 +176,7 @@ u = u.wrapping_mul(10000 << 32 | 1) >> 32; ────────────�
 10000 * (100 * (10 * d7 + d6) + 1 * (10 * d5 + d4)) + 1 * (100 * (10 * d3 + d2) + 1 * (10 * d1 + d0)
 ```
 `parse_16` would look like
-```Rust,ignore
+```rust,ignore
 u = (u.wrapping_mul(10 << 8 | 1) >> 8) & 0x00ff00ff00ff00ff00ff00ff00ff00ff;
 u = (u.wrapping_mul(100 << 16 | 1) >> 16) & 0x0000ffff0000ffff0000ffff0000ffff;
 u = (u.wrapping_mul(10000 << 32 | 1) >> 32) & 0x00000000ffffffff00000000ffffffff;
