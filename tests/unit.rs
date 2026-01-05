@@ -34,29 +34,67 @@ mod tests {
         assert!(atoi::<u64>(b"1234a").is_err());
     }
 
-    fn all_parse_byte<I: FromRadix10Checked + PartialEq + Debug + FromStr>() {
-        let mut buf = [0u8; 6];
-        for b1 in 0..=255 {
-            for i in 0..4 {
-                buf[i] = b1;
-                let sub = &buf[i..i + 1];
-                assert_eq!(atoi::<I>(sub).ok(), correct_parse(sub), "{:?}", sub);
-            }
-            for b2 in 0..=255 {
-                for i in 0..4 {
-                    buf[i] = b1;
-                    buf[i + 1] = b2;
-                    let sub = &buf[i..i + 2];
-                    assert_eq!(atoi::<I>(sub).ok(), correct_parse(sub), "{:?}", sub);
-                }
+    #[test]
+    fn zeros() {
+        assert_eq!(atoi::<u8>(b"0000"), Ok(0));
+        assert_eq!(atoi::<u8>(b"0001"), Ok(1));
 
-                for b3 in 0..=255 {
-                    for i in 0..4 {
-                        buf[i] = b1;
-                        buf[i + 1] = b2;
+        assert_eq!(atoi::<u64>(b"000000000000000000000000"), Ok(0));
+        assert_eq!(atoi::<u64>(b"000000000000000000000001"), Ok(1));
+    }
+
+    macro_rules! all_parse_valid_num {
+        ($max:literal, $type:ty) => {{
+            let mut buf = [42u8; 64];
+            for x in 0..=$max {
+                let mut buffer = itoa::Buffer::new();
+                let s = buffer.format(x);
+                let l = s.as_bytes().len();
+                for i in 0..=7 {
+                    buf[i..i + l].copy_from_slice(s.as_bytes());
+                    assert_eq!(atoi::<$type>(&buf[i..i + l]), Ok(x));
+                }
+            }
+        }};
+    }
+
+    #[test]
+    fn test_exhaustive_valid_u64() {
+        all_parse_valid_num!(16777216, u64);
+    }
+
+    #[test]
+    fn test_exhaustive_valid_u8() {
+        all_parse_valid_num!(255, u8);
+    }
+
+    fn all_parse_byte<I: FromRadix10Checked + PartialEq + Debug + FromStr>() {
+        let mut buf = [0u8; 8];
+        for i in 0..=3 {
+            for b1 in 0..=255 {
+                buf[i] = b1;
+                assert_eq!(
+                    atoi::<I>(&buf[i..i + 1]).ok(),
+                    correct_parse(&buf[i..i + 1])
+                );
+                for b2 in 0..=255 {
+                    buf[i + 1] = b2;
+                    assert_eq!(
+                        atoi::<I>(&buf[i..i + 2]).ok(),
+                        correct_parse(&buf[i..i + 2])
+                    );
+                    for b3 in 0..=255 {
                         buf[i + 2] = b3;
-                        let sub = &buf[i..i + 3];
-                        assert_eq!(atoi::<I>(sub).ok(), correct_parse(sub), "{:?}", sub);
+                        assert_eq!(
+                            atoi::<I>(&buf[i..i + 3]).ok(),
+                            correct_parse(&buf[i..i + 3])
+                        );
+                        /*
+                        for b4 in 0..=255 {
+                            buf[i + 3] = b4;
+                            assert_eq!(atoi::<I>(&buf[i..i+4]).ok(), correct_parse(&buf[i..i+4]));
+                        }
+                        */
                     }
                 }
             }
