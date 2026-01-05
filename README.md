@@ -22,7 +22,7 @@ Benchmark source: https://github.com/tomtomwombat/atoi-benchmark.
 <img width="1920" height="967" alt="range" src="https://github.com/user-attachments/assets/dd6ad148-6671-439d-b7b2-2aa07d4c6aa7" />
 
 # How it works
-cetane's integer parsers are built from composing 4 core parsing functions, `parse_1`, `parse_2`, `parse_4`, and `parse_8`. Each of these functions parse numbers from the range 1-9, 10-99, 100-999, and 1000-9999 respectively.
+cetane's integer parsers are built from composing 4 core parsing functions, `parse_1`, `parse_2`, `parse_4`, and `parse_8`. Each of these functions parse numbers from the range 0 to 9, 99, 999, and 9999 respectively.
 
 As an example, here's a walkthrough of `parse_4` applied to `s = b"7852"`:
 ```rust,ignore
