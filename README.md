@@ -9,8 +9,8 @@ This crate is a work in progress. I am still tuning, adding broader functionalit
 ```Rust
 use cetane::atoi;
 
-let num64 = atoi::<u64>("42").unwrap();
-let num8 = atoi::<u8>("42").unwrap();
+let num64 = atoi::<u64>(b"42").unwrap();
+let num8 = atoi::<u8>(b"42").unwrap();
 ```
 
 # Performance
