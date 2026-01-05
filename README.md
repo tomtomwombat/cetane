@@ -24,11 +24,9 @@ Benchmark source: https://github.com/tomtomwombat/atoi-benchmark.
 <img width="1920" height="967" alt="range" src="https://github.com/user-attachments/assets/dd6ad148-6671-439d-b7b2-2aa07d4c6aa7" />
 
 # How it works
-cetane uses SWAR techniques (SIMD within a register).
+cetane's integer parsers are built from composing 4 core parsing functions, `parse_1`, `parse_2`, `parse_4`, and `parse_8`. Each of these functions parse numbers from the range 1-9, 10-99, 100-999, and 1000-9999 respectively.
 
-Integer parsers are built from combining 4 core parsing functions, `parse_1`, `parse_2`, `parse_4`, and `parse_8`.
-
-Let's take a look at `parse_4` applied to `s = b"7852"` for an example:
+As an example, here's a walkthrough of `parse_4` applied to `s = b"7852"`:
 ```Rust,ignore
 fn parse_4(s: &mut &[u8], is_err: &mut u64) -> u64 {
     let mut u = unsafe { ptr::read_unaligned(s.as_ptr() as *const u32) };
