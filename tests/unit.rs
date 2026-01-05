@@ -18,6 +18,11 @@ mod tests {
     }
 
     #[test]
+    fn simple() {
+        assert_eq!(atoi::<u64>(b"7852"), Ok(7852));
+    }
+
+    #[test]
     fn test1() {
         assert_eq!(atoi::<u8>(b"97"), Ok(97));
         assert_eq!(atoi::<u64>(b"97"), Ok(97));

@@ -15,22 +15,11 @@ pub fn atoi<I: FromRadix10Checked>(text: &[u8]) -> Result<I, ()> {
     I::from_radix_10_checked(text)
 }
 
-/// Helper
-#[cfg(feature = "std")]
-pub fn print_bytes_64(x: u64) {
-    let s = format!("{:064b}", x);
-    for i in 0..8 {
-        print!("{} ", s[(i * 8)..(i * 8 + 8)].to_string());
-        // print!("{:08b} ", b);
-    }
-    print!("\n");
-}
-
 #[inline]
 fn parse_1(s: &mut &[u8], is_err: &mut u64) -> u64 {
     let u = s[0] as u64 ^ 0x30;
-    *is_err |= (u | (u.wrapping_add(0x06))) & 0xf0;
     *s = &s[1..];
+    *is_err |= (u | u.wrapping_add(0x06)) & 0xf0;
     u
 }
 
@@ -39,7 +28,7 @@ fn parse_2(s: &mut &[u8], is_err: &mut u64) -> u64 {
     let mut u = unsafe { ptr::read_unaligned(s.as_ptr() as *const u16) };
     *s = &s[2..];
     u ^= 0x3030;
-    *is_err |= ((u | (u.wrapping_add(0x0606))) & 0xf0f0) as u64;
+    *is_err |= ((u | u.wrapping_add(0x0606)) & 0xf0f0) as u64;
 
     u = u.wrapping_mul(10 << 8 | 1) >> 8;
     u as u64
@@ -50,7 +39,7 @@ fn parse_4(s: &mut &[u8], is_err: &mut u64) -> u64 {
     let mut u = unsafe { ptr::read_unaligned(s.as_ptr() as *const u32) };
     *s = &s[4..];
     u ^= 0x30303030;
-    *is_err |= ((u | (u.wrapping_add(0x06060606))) & 0xf0f0f0f0) as u64;
+    *is_err |= ((u | u.wrapping_add(0x06060606)) & 0xf0f0f0f0) as u64;
 
     u = (u.wrapping_mul(10 << 8 | 1) >> 8) & 0xff00ff;
     u = u.wrapping_mul(100 << 16 | 1) >> 16;
@@ -64,8 +53,11 @@ fn parse_8(s: &mut &[u8], is_err: &mut u64) -> u64 {
     u ^= 0x3030303030303030;
     *is_err |= (u | u.wrapping_add(0x0606060606060606)) & 0xf0f0f0f0f0f0f0f0;
 
+    // 10 * d7 + d6, 10 * d5 + d4, 10 * d3 + d2, 10 * d1 + d0
     u = (u.wrapping_mul(10 << 8 | 1) >> 8) & 0xff00ff00ff00ff;
+    // 100 * (10 * d7 + d6) + 1 * (10 * d5 + d4)), 100 * (10 * d3 + d2) + 1 * (10 * d1 + d0)
     u = (u.wrapping_mul(100 << 16 | 1) >> 16) & 0xffff0000ffff;
+    // 10000 * (100 * (10 * d7 + d6) + 1 * (10 * d5 + d4)) + 1 * (100 * (10 * d3 + d2) + 1 * (10 * d1 + d0)
     u = u.wrapping_mul(10000 << 32 | 1) >> 32;
     u
 }
@@ -73,9 +65,6 @@ fn parse_8(s: &mut &[u8], is_err: &mut u64) -> u64 {
 impl FromRadix10Checked for u64 {
     #[inline]
     fn from_radix_10_checked(mut s: &[u8]) -> Result<Self, ()> {
-        if s.len() > 20 || s.is_empty() {
-            return Err(());
-        }
         let mut res: u64 = 0;
         let mut is_err = 0;
 
@@ -86,7 +75,7 @@ impl FromRadix10Checked for u64 {
             2 => {
                 res = parse_2(&mut s, &mut is_err);
             }
-            _ => {
+            3..=20 => {
                 while s.len() >= 8 {
                     let x = parse_8(&mut s, &mut is_err);
                     res = res.wrapping_mul(100000000);
@@ -94,6 +83,8 @@ impl FromRadix10Checked for u64 {
                 }
                 if s.len() >= 4 {
                     let x = parse_4(&mut s, &mut is_err);
+                    // Since we throw out >20 length before, we only need check overflow for len=20.
+                    // If len=20, then we've called parse_8 twice and parse_4 once.
                     if (res as u128) * 10000 + x as u128 > u64::MAX as u128 {
                         return Err(());
                     }
@@ -110,6 +101,9 @@ impl FromRadix10Checked for u64 {
                     res = res.wrapping_mul(10);
                     res = res.wrapping_add(x);
                 }
+            }
+            _ => {
+                return Err(());
             }
         }
 
