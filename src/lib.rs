@@ -11,6 +11,8 @@ pub trait FromRadix10Checked {
         Self: Sized;
 }
 
+/// Parses an integer from the bytes of the pattern `r"[0-9]+"`.
+/// Unlike `std`, the prefix of "+" is not allowed.
 pub fn atoi<I: FromRadix10Checked>(text: &[u8]) -> Result<I, ()> {
     I::from_radix_10_checked(text)
 }

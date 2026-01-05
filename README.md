@@ -3,8 +3,9 @@ Fast integer parser.
 
 # Overview
 
-This crate is my extension and generalization of the 8-bit int parser explained in https://lemire.me/blog/2023/11/28/parsing-8-bit-integers-quickly/.
-This crate is a work in progress. I am still tuning and adding broader functionality.
+This crate is my extension and generalization of the 8-bit int parser explained in https://lemire.me/blog/2023/11/28/parsing-8-bit-integers-quickly/. My algorithm uses divide and conquer with SWAR (SIMD within a register) to parse varying width unsigned integers from decimal bytes. cetane is 1-3x faster than the fastest Rust parser I've tested with so far.
+
+This crate is a work in progress. I am still tuning, adding broader functionality, and cleaning up the documentation.
 
 # Usage
 ```Rust
