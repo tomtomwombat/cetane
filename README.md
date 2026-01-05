@@ -14,6 +14,13 @@ let num64 = atoi::<u64>("42").unwrap();
 let num8 = atoi::<u8>("42").unwrap();
 ```
 
+# Performance
+Benchmark source: https://github.com/tomtomwombat/atoi-benchmark.
+- Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz (2.59 GHz)
+- 64-bit operating system, x64-based processor
+<img width="1920" height="967" alt="exact" src="https://github.com/user-attachments/assets/221e0898-e0bc-4cfc-b516-7ea8a482a59e" />
+
+<img width="1920" height="967" alt="range" src="https://github.com/user-attachments/assets/dd6ad148-6671-439d-b7b2-2aa07d4c6aa7" />
 
 # How it works
 cetane uses SWAR techniques (SIMD within a register).
