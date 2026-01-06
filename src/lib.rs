@@ -72,59 +72,53 @@ fn strip_leading_zeros(s: &mut &[u8], until: usize) {
 }
 
 #[inline]
-fn parse_n(s: &mut &[u8], res: &mut u64, is_err: &mut u64) -> Result<(), ()> {
+fn parse_u64(s: &mut &[u8], is_err: &mut u64) -> u64 {
+    let mut res: u64 = 0;
     while s.len() >= 8 {
         let x = parse_8(s, is_err);
-        *res = res.wrapping_mul(100000000);
-        *res = res.wrapping_add(x);
+        res = res.wrapping_mul(100000000);
+        res = res.wrapping_add(x);
     }
     if s.len() >= 4 {
         let x = parse_4(s, is_err);
         // Since we throw out >20 length before, we only need check overflow for len=20.
         // If len=20, then we've called parse_8 twice and parse_4 once.
-        if (*res as u128) * 10000 + x as u128 > u64::MAX as u128 {
-            return Err(());
+        if res >= 18446744_07370955 {
+            let overflow = (res as u128 * 10000 + x as u128 >> 64) as u64;
+            *is_err |= overflow;
         }
-        *res = res.wrapping_mul(10000);
-        *res = res.wrapping_add(x);
+        res = res.wrapping_mul(10000);
+        res = res.wrapping_add(x);
     }
     if s.len() >= 2 {
         let x = parse_2(s, is_err);
-        *res = res.wrapping_mul(100);
-        *res = res.wrapping_add(x);
+        res = res.wrapping_mul(100);
+        res = res.wrapping_add(x);
     }
     if !s.is_empty() {
         let x = parse_1(s, is_err);
-        *res = res.wrapping_mul(10);
-        *res = res.wrapping_add(x);
+        res = res.wrapping_mul(10);
+        res = res.wrapping_add(x);
     }
-    Ok(())
+    res
 }
 
 impl FromRadix10Checked for u64 {
     #[inline]
     fn from_radix_10_checked(mut s: &[u8]) -> Result<Self, ()> {
-        let mut res: u64 = 0;
         let mut is_err = 0;
-        match s.len() {
-            1 => {
-                res = parse_1(&mut s, &mut is_err);
-            }
-            2 => {
-                res = parse_2(&mut s, &mut is_err);
-            }
-            3..=20 => {
-                parse_n(&mut s, &mut res, &mut is_err)?;
-            }
+        let res: u64 = match s.len() {
+            1 => parse_1(&mut s, &mut is_err),
+            2 => parse_2(&mut s, &mut is_err),
+            3..=20 => parse_u64(&mut s, &mut is_err),
             _ => {
                 strip_leading_zeros(&mut s, 20);
                 if s.is_empty() || s.len() > 20 {
                     return Err(());
                 }
-                parse_n(&mut s, &mut res, &mut is_err)?;
+                parse_u64(&mut s, &mut is_err)
             }
-        }
-
+        };
         match is_err {
             0 => Ok(res),
             _ => Err(()),
@@ -132,34 +126,85 @@ impl FromRadix10Checked for u64 {
     }
 }
 
+#[inline]
+fn parse_u32(s: &mut &[u8], is_err: &mut u64) -> u64 {
+    let mut res: u64 = 0;
+    if s.len() >= 8 {
+        res = parse_8(s, is_err);
+    }
+    if s.len() >= 4 {
+        let x = parse_4(s, is_err);
+        res = res.wrapping_mul(10000);
+        res = res.wrapping_add(x);
+    }
+    if s.len() >= 2 {
+        let x = parse_2(s, is_err);
+        res = res.wrapping_mul(100);
+        res = res.wrapping_add(x);
+    }
+    if !s.is_empty() {
+        let x = parse_1(s, is_err);
+        res = res.wrapping_mul(10);
+        res = res.wrapping_add(x);
+    }
+    *is_err |= res >> 32;
+    res
+}
+
+impl FromRadix10Checked for u32 {
+    #[inline]
+    fn from_radix_10_checked(mut s: &[u8]) -> Result<Self, ()> {
+        let mut is_err = 0;
+        let res: u64 = match s.len() {
+            1 => parse_1(&mut s, &mut is_err),
+            2 => parse_2(&mut s, &mut is_err),
+            3..=10 => parse_u32(&mut s, &mut is_err),
+            _ => {
+                strip_leading_zeros(&mut s, 10);
+                if s.is_empty() || s.len() > 10 {
+                    return Err(());
+                }
+                parse_u32(&mut s, &mut is_err)
+            }
+        };
+        match is_err {
+            0 => Ok(res as u32),
+            _ => Err(()),
+        }
+    }
+}
+
+#[inline]
+fn parse_u8(s: &mut &[u8], is_err: &mut u64) -> u64 {
+    let mut res = 0;
+    if s.len() >= 2 {
+        res = parse_2(s, is_err);
+    }
+    if !s.is_empty() {
+        let x = parse_1(s, is_err);
+        res = res.wrapping_mul(10);
+        res = res.wrapping_add(x);
+    }
+    *is_err |= res >> 8;
+    res
+}
+
 impl FromRadix10Checked for u8 {
     #[inline]
     fn from_radix_10_checked(mut s: &[u8]) -> Result<Self, ()> {
         let mut is_err = 0;
-        let mut res: u64 = 0;
-        match s.len() {
-            1 => {
-                res = parse_1(&mut s, &mut is_err);
-            }
-            2 => {
-                res = parse_2(&mut s, &mut is_err);
-            }
-            3 => {
-                res = parse_2(&mut s, &mut is_err);
-                res = res.wrapping_mul(10);
-                res = res.wrapping_add(parse_1(&mut s, &mut is_err));
-                is_err |= res >> 8;
-            }
+        let res: u64 = match s.len() {
+            1 => parse_1(&mut s, &mut is_err),
+            2 => parse_2(&mut s, &mut is_err),
+            3 => parse_u8(&mut s, &mut is_err),
             _ => {
                 strip_leading_zeros(&mut s, 3);
                 if s.is_empty() || s.len() > 3 {
                     return Err(());
                 }
-                parse_n(&mut s, &mut res, &mut is_err)?;
-                is_err |= res >> 8;
+                parse_u8(&mut s, &mut is_err)
             }
         };
-
         match is_err {
             0 => Ok(res as u8),
             _ => Err(()),
