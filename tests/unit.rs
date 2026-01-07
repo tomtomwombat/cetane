@@ -14,6 +14,7 @@ mod tests {
     #[test]
     fn test_empty() {
         assert!(atoi::<u8>(b"").is_err());
+        assert!(atoi::<u16>(b"").is_err());
         assert!(atoi::<u32>(b"").is_err());
         assert!(atoi::<u64>(b"").is_err());
     }
@@ -26,6 +27,7 @@ mod tests {
     #[test]
     fn test1() {
         assert_eq!(atoi::<u8>(b"97"), Ok(97));
+        assert_eq!(atoi::<u16>(b"97"), Ok(97));
         assert_eq!(atoi::<u32>(b"97"), Ok(97));
         assert_eq!(atoi::<u64>(b"97"), Ok(97));
     }
@@ -33,6 +35,7 @@ mod tests {
     #[test]
     fn test2() {
         assert!(atoi::<u8>(b"1234a").is_err());
+        assert!(atoi::<u16>(b"1234a").is_err());
         assert!(atoi::<u32>(b"1234a").is_err());
         assert!(atoi::<u64>(b"1234a").is_err());
     }
@@ -41,6 +44,9 @@ mod tests {
     fn zeros() {
         assert_eq!(atoi::<u8>(b"0000"), Ok(0));
         assert_eq!(atoi::<u8>(b"0001"), Ok(1));
+
+        assert_eq!(atoi::<u16>(b"00000000"), Ok(0));
+        assert_eq!(atoi::<u16>(b"00000001"), Ok(1));
 
         assert_eq!(atoi::<u32>(b"000000000000000000000000"), Ok(0));
         assert_eq!(atoi::<u32>(b"000000000000000000000001"), Ok(1));
@@ -75,6 +81,11 @@ mod tests {
     }
 
     #[test]
+    fn test_exhaustive_valid_u16() {
+        all_parse_valid_num!(65535, u16);
+    }
+
+    #[test]
     fn test_exhaustive_valid_u8() {
         all_parse_valid_num!(255, u8);
     }
@@ -82,30 +93,23 @@ mod tests {
     fn all_parse_byte<I: FromRadix10Checked + PartialEq + Debug + FromStr>() {
         let mut buf = [0u8; 8];
         for i in 0..=3 {
+            let base = unsafe { buf.as_ptr().add(i) };
             for b1 in 0..=255 {
                 buf[i] = b1;
-                assert_eq!(
-                    atoi::<I>(&buf[i..i + 1]).ok(),
-                    correct_parse(&buf[i..i + 1])
-                );
+                let s1 = unsafe { std::slice::from_raw_parts(base, 1) };
+                assert_eq!(atoi::<I>(s1).ok(), correct_parse(s1));
                 for b2 in 0..=255 {
                     buf[i + 1] = b2;
-                    assert_eq!(
-                        atoi::<I>(&buf[i..i + 2]).ok(),
-                        correct_parse(&buf[i..i + 2])
-                    );
+                    let s2 = unsafe { std::slice::from_raw_parts(base, 2) };
+                    assert_eq!(atoi::<I>(s2).ok(), correct_parse(s2));
                     for b3 in 0..=255 {
                         buf[i + 2] = b3;
-                        assert_eq!(
-                            atoi::<I>(&buf[i..i + 3]).ok(),
-                            correct_parse(&buf[i..i + 3])
-                        );
+                        let s3 = unsafe { std::slice::from_raw_parts(base, 3) };
+                        assert_eq!(atoi::<I>(s3).ok(), correct_parse(s3));
                         for b4 in 0..=255 {
                             buf[i + 3] = b4;
-                            assert_eq!(
-                                atoi::<I>(&buf[i..i + 4]).ok(),
-                                correct_parse(&buf[i..i + 4])
-                            );
+                            let s4 = unsafe { std::slice::from_raw_parts(base, 4) };
+                            assert_eq!(atoi::<I>(s4).ok(), correct_parse(s4));
                         }
                     }
                 }
@@ -121,6 +125,11 @@ mod tests {
     #[test]
     fn test_exhaustive_u32() {
         all_parse_byte::<u32>();
+    }
+
+    #[test]
+    fn test_exhaustive_u16() {
+        all_parse_byte::<u16>();
     }
 
     #[test]
@@ -145,7 +154,7 @@ mod tests {
         let mut b = max.to_string().as_bytes().to_vec();
         for i in 0..b.len() {
             b[i] += 1;
-            assert_eq!(atoi::<I>(&b).ok(), correct_parse(&b));
+            assert_eq!(atoi::<I>(&b).ok(), correct_parse(&b), "{:?}", b);
             b[i] -= 1;
         }
     }
@@ -153,6 +162,7 @@ mod tests {
     #[test]
     fn test_large() {
         assert_large_correct::<u8>(u8::MAX);
+        assert_large_correct::<u16>(u16::MAX);
         assert_large_correct::<u32>(u32::MAX);
         assert_large_correct::<u64>(u64::MAX);
     }
