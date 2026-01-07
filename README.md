@@ -1,7 +1,7 @@
 # cetane
 A fast integer parser in Rust.
 
-This crate is my extension and generalization of the 8-bit int parser explained in https://lemire.me/blog/2023/11/28/parsing-8-bit-integers-quickly/. My algorithm uses divide and conquer to Lemire's SWAR (SIMD within a register) techniques to parse varying width unsigned integers from decimal bytes. cetane is 1-3x faster than the fastest Rust parser I've tested with so far.
+This crate is my extension of the 8-bit int parser explained in https://lemire.me/blog/2023/11/28/parsing-8-bit-integers-quickly/. My algorithm adds divide and conquer to Lemire's SWAR (SIMD (single instruction multiple data) within a register) techniques to parse varying width unsigned integers from decimal bytes. cetane is 1-3x faster than the next fastest Rust parser I've tested with so far.
 
 This crate is a work in progress. I am still tuning, adding broader functionality, and cleaning up the documentation.
 
@@ -22,7 +22,11 @@ Benchmark source: https://github.com/tomtomwombat/atoi-benchmark.
 <img width="1920" height="967" alt="range" src="https://github.com/user-attachments/assets/dd6ad148-6671-439d-b7b2-2aa07d4c6aa7" />
 
 # How it works
-cetane's integer parsers are built from composing 4 core parsing functions, `parse_1`, `parse_2`, `parse_4`, and `parse_8`. Each of these functions parse numbers from the range 0 to 9, 99, 999, and 9999 respectively.
+cetane's integer parsers are built from composing 5 core parsing functions, `parse_1`, `parse_2`, `parse_4`, `parse_8`, `parse_16`. Each of these functions parse numbers from the range 0 to 9, 99, 9999, 99999999, and 9999999999999999 respectively:
+1. Read the bytes from the input directly into an uint.
+2. Convert each byte (digit) to the decimal representation (e.g. b'0' -> 0)
+3. Validate that all the bytes are digits.
+4. Dot product the bytes with their respective magnitudes in a series of log2(n) SWAR steps.
 
 As an example, here's a walkthrough of `parse_4` applied to `s = b"7852"`:
 ```rust,ignore
@@ -38,12 +42,12 @@ fn parse_4(s: &mut &[u8], is_err: &mut u64) -> u64 {
 }
 ```
 #### 1.
-Read 4 bytes of `s` into a `u32` `u` and shifts the `s` pointer by 4.
-Note that first byte in `s` is the least significant  
 ```rust,ignore
 let mut u = unsafe { ptr::read_unaligned(s.as_ptr() as *const u32) };
 *s = &s[4..];
 ```
+Read 4 bytes of `s` into a `u32`, `u`, and advance the `s` pointer by 4. The first byte in `s` is the least significant byte in `u`.
+
 ```ignore
 s:
       '7'      '8'      '5'      '2'
@@ -56,6 +60,9 @@ u:                                ▼
 ```
 
 #### 2.
+```rust,ignore
+u ^= 0x30303030;
+```
 Convert each character to the decimal value. Since `'0'` is `48` or `0x30` in hex, subtract `0x30` from each byte in parrell.
 Since '0' = 48 = 00110000, all binary representations up '9' all are 0011xxxx, XOR strips those bytes leaving the decimal value.
 XOR typically has fewer CPU cycles than subtraction.
@@ -70,14 +77,13 @@ XOR typically has fewer CPU cycles than subtraction.
 ```
 
 #### 3.
-Check if all these digits are valid, in parrell. The goal is to map the 10 valid digits to 0-15 range, e.g. 
-the left part of the byte. If there are any bits outside of that that range, the digit is not valid.
-```Rust,ignore
+```rust,ignore
 *is_err |= ((u | (u.wrapping_add(0x06060606))) & 0xf0f0f0f0) as u64;
 ```
+Check if all four digits are valid in parallel. The goal is to map only the 10 valid digits to 0-15 range. Any other non-valid digits will be outside this range. If there are any bits outside of that that range, the digit is not valid.
 
 
-adding 6 to all bytes moves valid all bytes to the 6-15 (00000110 - 00001111) range 
+First, adding 6 to all bytes moves valid all bytes to the 6-15 (00000110 - 00001111) range: 
 ```ignore
 00000010 00000101 00001000 00000111
 +
@@ -106,6 +112,10 @@ Since no bytes are outside the range, the result is 0, so there an errors in pro
 This information is folded into `is_err`, which is != 0 if any byte is not a valid character.
 
 #### 4.
+```rust,ignore
+u = (u.wrapping_mul(10 << 8 | 1) >> 8) & 0xff00ff;
+u = u.wrapping_mul(100 << 16 | 1) >> 16;
+```
 We have the digits, but they are seperated in their own byte buckets.
 
 Our number can be expressed as `1000 * d3 + 100 * d2 + 10 * d1 + d0`. In our example `d3 = 7, d2 = 8, d1 = 8, d0 = 2`. This can be expressed as `100 * (10 * d3 + d2) + 1 * (10 * d1 + d0)`.
@@ -180,5 +190,5 @@ u = u.wrapping_mul(10000 << 32 | 1) >> 32; ────────────�
 u = (u.wrapping_mul(10 << 8 | 1) >> 8) & 0x00ff00ff00ff00ff00ff00ff00ff00ff;
 u = (u.wrapping_mul(100 << 16 | 1) >> 16) & 0x0000ffff0000ffff0000ffff0000ffff;
 u = (u.wrapping_mul(10000 << 32 | 1) >> 32) & 0x00000000ffffffff00000000ffffffff;
-u = u.wrapping_mul(1000000 << 64 | 1) >> 64;
+u = u.wrapping_mul(100000000 << 64 | 1) >> 64;
 ```

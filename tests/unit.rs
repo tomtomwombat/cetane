@@ -17,6 +17,7 @@ mod tests {
         assert!(atoi::<u16>(b"").is_err());
         assert!(atoi::<u32>(b"").is_err());
         assert!(atoi::<u64>(b"").is_err());
+        assert!(atoi::<u128>(b"").is_err());
     }
 
     #[test]
@@ -30,6 +31,7 @@ mod tests {
         assert_eq!(atoi::<u16>(b"97"), Ok(97));
         assert_eq!(atoi::<u32>(b"97"), Ok(97));
         assert_eq!(atoi::<u64>(b"97"), Ok(97));
+        assert_eq!(atoi::<u128>(b"97"), Ok(97));
     }
 
     #[test]
@@ -38,6 +40,7 @@ mod tests {
         assert!(atoi::<u16>(b"1234a").is_err());
         assert!(atoi::<u32>(b"1234a").is_err());
         assert!(atoi::<u64>(b"1234a").is_err());
+        assert!(atoi::<u128>(b"1234a").is_err());
     }
 
     #[test]
@@ -53,6 +56,15 @@ mod tests {
 
         assert_eq!(atoi::<u64>(b"000000000000000000000000"), Ok(0));
         assert_eq!(atoi::<u64>(b"000000000000000000000001"), Ok(1));
+
+        assert_eq!(
+            atoi::<u128>(b"000000000000000000000000000000000000000000000000"),
+            Ok(0)
+        );
+        assert_eq!(
+            atoi::<u128>(b"000000000000000000000000000000000000000000000001"),
+            Ok(1)
+        );
     }
 
     macro_rules! all_parse_valid_num {
@@ -68,6 +80,11 @@ mod tests {
                 }
             }
         }};
+    }
+
+    #[test]
+    fn test_exhaustive_valid_u128() {
+        all_parse_valid_num!(16777216, u128);
     }
 
     #[test]
@@ -118,6 +135,11 @@ mod tests {
     }
 
     #[test]
+    fn test_exhaustive_u128() {
+        all_parse_byte::<u128>();
+    }
+
+    #[test]
     fn test_exhaustive_u64() {
         all_parse_byte::<u64>();
     }
@@ -165,5 +187,6 @@ mod tests {
         assert_large_correct::<u16>(u16::MAX);
         assert_large_correct::<u32>(u32::MAX);
         assert_large_correct::<u64>(u64::MAX);
+        assert_large_correct::<u128>(u128::MAX);
     }
 }

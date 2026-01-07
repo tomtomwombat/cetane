@@ -69,7 +69,7 @@ fn parse_8(s: &mut &[u8], is_err: &mut u64) -> u64 {
     u = (u.wrapping_mul(10 << 8 | 1) >> 8) & 0xff00ff00ff00ff;
     // 100 * (10 * d7 + d6) + 1 * (10 * d5 + d4), 100 * (10 * d3 + d2) + 1 * (10 * d1 + d0)
     u = (u.wrapping_mul(100 << 16 | 1) >> 16) & 0xffff0000ffff;
-    // 10000 * (100 * (10 * d7 + d6) + 1 * (10 * d5 + d4)) + 1 * (100 * (10 * d3 + d2) + 1 * (10 * d1 + d0)
+    // 10000 * (100 * (10 * d7 + d6) + 1 * (10 * d5 + d4)) + 1 * (100 * (10 * d3 + d2) + 1 * (10 * d1 + d0))
     u = u.wrapping_mul(10000 << 32 | 1) >> 32;
     u
 }
@@ -77,6 +77,7 @@ fn parse_8(s: &mut &[u8], is_err: &mut u64) -> u64 {
 #[inline]
 fn parse_16(s: &mut &[u8], is_err: &mut u64) -> u128 {
     let mut u = unsafe { std::ptr::read_unaligned(s.as_ptr() as *const u128) };
+    advance_unchecked(s, 16);
     u ^= 0x30303030303030303030303030303030;
     let is_err2 = (u | u.wrapping_add(0x06060606060606060606060606060606))
         & 0xF0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0;
@@ -89,7 +90,7 @@ fn parse_16(s: &mut &[u8], is_err: &mut u64) -> u128 {
     // (10000 << 32) | 1
     u = (u.wrapping_mul(10000 << 32 | 1) >> 32) & 0x00000000ffffffff00000000ffffffff;
     // ((1000 * 1000) << 64) | 1
-    u = u.wrapping_mul((1000000 << 64) | 1) >> 64;
+    u = u.wrapping_mul((100000000 << 64) | 1) >> 64;
     u
 }
 
@@ -97,6 +98,67 @@ fn parse_16(s: &mut &[u8], is_err: &mut u64) -> u128 {
 fn strip_leading_zeros(s: &mut &[u8], until: usize) {
     while s.len() > until && s[0] == b'0' {
         *s = &s[1..];
+    }
+}
+
+#[inline]
+fn parse_u128(s: &mut &[u8], is_err: &mut u64) -> u128 {
+    let mut res: u128 = 0;
+    if s.len() >= 16 {
+        res = parse_16(s, is_err);
+    }
+    if s.len() >= 16 {
+        let x = parse_16(s, is_err);
+        res = res.wrapping_mul(10000000000000000);
+        res = res.wrapping_add(x);
+    } else if s.len() >= 8 {
+        let x = parse_8(s, is_err) as u128;
+        res = res.wrapping_mul(100000000);
+        res = res.wrapping_add(x);
+    }
+    if s.len() >= 4 {
+        let x = parse_4(s, is_err) as u128;
+        res = res.wrapping_mul(10000);
+        res = res.wrapping_add(x);
+    }
+    if s.len() >= 2 {
+        let x = parse_2(s, is_err) as u128;
+        res = res.wrapping_mul(100);
+        res = res.wrapping_add(x);
+    }
+    if !s.is_empty() {
+        let x = parse_1(s, is_err) as u128;
+        // TODO: can check this in 2 or 4 branch instead (whichever is less common)
+        *is_err |= (res > 34028236692093846346337460743176821145) as u64;
+        *is_err |= (res >= 34028236692093846346337460743176821145 && x > 5) as u64;
+        res = res.wrapping_mul(10);
+        res = res.wrapping_add(x);
+    }
+    res
+}
+
+impl FromRadix10Checked for u128 {
+    #[inline]
+    fn from_radix_10_checked(mut s: &[u8]) -> Result<Self, ()> {
+        // 340_282_366_920_938_463_463_374_607_431_768_211_455
+        // 340282366920938463463374607431768211455
+        let mut is_err = 0;
+        let res: u128 = match s.len() {
+            1 => parse_1(&mut s, &mut is_err) as u128,
+            2 => parse_2(&mut s, &mut is_err) as u128,
+            3..=39 => parse_u128(&mut s, &mut is_err),
+            _ => {
+                strip_leading_zeros(&mut s, 39);
+                if s.is_empty() || s.len() > 39 {
+                    return Err(());
+                }
+                parse_u128(&mut s, &mut is_err)
+            }
+        };
+        match is_err {
+            0 => Ok(res),
+            _ => Err(()),
+        }
     }
 }
 
