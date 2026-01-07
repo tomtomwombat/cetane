@@ -19,4 +19,11 @@ jobs:
     - name: Build
       run: cargo build --verbose
     - name: Run tests
-      run: cargo test --verbose
+      run: cargo test --release --verbose
+    - name: Install nightly + Miri
+      run: |
+          rustup toolchain install nightly
+          rustup component add miri --toolchain nightly
+    - name: Run Miri
+      run: |
+          cargo +nightly miri test --test property
