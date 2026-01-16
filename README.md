@@ -1,27 +1,64 @@
 # cetane
-A fast integer parser in Rust.
-
-This crate is my extension of the 8-bit int parser explained in https://lemire.me/blog/2023/11/28/parsing-8-bit-integers-quickly/. My algorithm adds divide and conquer to Lemire's SWAR (SIMD (single instruction multiple data) within a register) techniques to parse varying width unsigned integers from decimal bytes. cetane is 1-3x faster than the next fastest Rust parser I've tested with so far.
-
-This crate is a work in progress. I am still tuning, adding broader functionality, and cleaning up the documentation.
+cetane is a high-performance integer and digit parsing library for Rust. It matches the behavior of std parsing while achieving state-of-the-art performance on common inputs. cetane also exposes low-level building blocks for constructing custom numeric parsers. cetane is 1-3x faster than existing Rust parsers.
 
 # Usage
 ```rust
-use cetane::atoi;
+use cetane::*;
 
-let num64 = atoi::<u64>(b"42").unwrap();
-let num8 = atoi::<u8>(b"42").unwrap();
+let _ = atoi::<u64>(b"42").unwrap();
+let _ = atoi::<i8>(b"-42").unwrap();
+let _ = atoi::<u32>(b"00042").unwrap();
+let _ = atoi::<u128>(b"+42").unwrap();
+
+// Ignoring the pesky '+' is faster
+let _ = atoi_no_plus::<u64>(b"42").unwrap();
+assert!(atoi_no_plus::<u64>(b"+42").is_err());
+
+let _: u64 = "42".parse_radix10().unwrap();
+let _: u64 = b"42".parse_radix10().unwrap();
+```
+```rust
+use cetane::{parse_4, parse_2};
+
+fn my_really_fast_6_digit_parser(mut src: &[u8]) -> Result<u64, ()> {
+      assert_eq!(src.len(), 6);
+      let mut is_err = 0;
+      let left = parse_4(&mut src, &mut is_err);
+      let right = parse_2(&mut src, &mut is_err);
+      if is_err > 0 {
+            return Err(());
+      }
+      Ok(left.wrapping_mul(100).wrapping_add(right))
+}
+
+assert_eq!(my_really_fast_6_digit_parser(b"123456"), Ok(123456));
 ```
 
 # Performance
-Benchmark source: https://github.com/tomtomwombat/atoi-benchmark.
+Benchmark source and more results: https://github.com/tomtomwombat/atoi-benchmark.
 - Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz (2.59 GHz)
 - 64-bit operating system, x64-based processor
 <img width="1920" height="967" alt="exact" src="https://github.com/user-attachments/assets/221e0898-e0bc-4cfc-b516-7ea8a482a59e" />
 
 <img width="1920" height="967" alt="range" src="https://github.com/user-attachments/assets/dd6ad148-6671-439d-b7b2-2aa07d4c6aa7" />
 
+# Should I Use This?
+Yes. cetane's behavior is of 1-1 parity with std. At worst, cetane matches the performance of the next fastest parser. At best (for larger inputs) cetane is 2-3x faster. cetane is extensivly tested:
+- exhaustive testing for correct inputs
+- exhaustive testing for all 4-byte combinations at different alignements
+- miri for undefined behavior
+- extensive property testing
+
+# To Do
+Below are some ideas for future functionality. Create an issue if you have a use-case for any.
+- General radix
+- Unchecked parsing
+- Parsing aligned data
+- Parsing buffered data (i.e. input has trailing buffer)
+
 # How it works
+This crate is an extension of the 8-bit int parser explained in https://lemire.me/blog/2023/11/28/parsing-8-bit-integers-quickly/. The algorithm adds divide and conquer to Lemire's SWAR (SIMD within a register) techniques to parse varying width unsigned integers from decimal bytes. 
+
 cetane's integer parsers are built from composing 5 core parsing functions, `parse_1`, `parse_2`, `parse_4`, `parse_8`, `parse_16`. Each of these functions parse numbers from the range 0 to 9, 99, 9999, 99999999, and 9999999999999999 respectively:
 1. Read the bytes from the input directly into an uint.
 2. Convert each byte (digit) to the decimal representation (e.g. b'0' -> 0)
@@ -46,7 +83,7 @@ fn parse_4(s: &mut &[u8], is_err: &mut u64) -> u64 {
 let mut u = unsafe { ptr::read_unaligned(s.as_ptr() as *const u32) };
 *s = &s[4..];
 ```
-Read 4 bytes of `s` into a `u32`, `u`, and advance the `s` pointer by 4. The first byte in `s` is the least significant byte in `u`.
+Read 4 bytes of `s` into a litte endian `u32`, `u`, and advance the `s` pointer by 4. The first byte in `s` is the least significant byte in `u`.
 
 ```ignore
 s:

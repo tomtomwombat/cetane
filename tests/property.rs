@@ -26,11 +26,41 @@ fn proptest_config() -> ProptestConfig {
 
 #[cfg(not(miri))]
 fn proptest_config() -> ProptestConfig {
-    ProptestConfig::with_cases(65536)
+    ProptestConfig::with_cases(65536 << 4)
 }
 
 proptest! {
     #![proptest_config(proptest_config())]
+
+    #[test]
+    fn valid_i32(x in any::<i32>()) {
+        prop_assert!(is_valid_int::<u8, i32>(x));
+        prop_assert!(is_valid_int::<u16, i32>(x));
+        prop_assert!(is_valid_int::<u32, i32>(x));
+        prop_assert!(is_valid_int::<u64, i32>(x));
+        prop_assert!(is_valid_int::<u128, i32>(x));
+
+        prop_assert!(is_valid_int::<i8, i32>(x));
+        prop_assert!(is_valid_int::<i16, i32>(x));
+        prop_assert!(is_valid_int::<i32, i32>(x));
+        prop_assert!(is_valid_int::<i64, i32>(x));
+        prop_assert!(is_valid_int::<i128, i32>(x));
+    }
+
+    #[test]
+    fn valid_i128(x in any::<i128>()) {
+        prop_assert!(is_valid_int::<u8, i128>(x));
+        prop_assert!(is_valid_int::<u16, i128>(x));
+        prop_assert!(is_valid_int::<u32, i128>(x));
+        prop_assert!(is_valid_int::<u64, i128>(x));
+        prop_assert!(is_valid_int::<u128, i128>(x));
+
+        prop_assert!(is_valid_int::<i8, i128>(x));
+        prop_assert!(is_valid_int::<i16, i128>(x));
+        prop_assert!(is_valid_int::<i32, i128>(x));
+        prop_assert!(is_valid_int::<i64, i128>(x));
+        prop_assert!(is_valid_int::<i128, i128>(x));
+    }
 
     #[test]
     fn valid_u32(x in any::<u32>()) {
@@ -39,15 +69,12 @@ proptest! {
         prop_assert!(is_valid_int::<u32, u32>(x));
         prop_assert!(is_valid_int::<u64, u32>(x));
         prop_assert!(is_valid_int::<u128, u32>(x));
-    }
 
-    #[test]
-    fn valid_u64(x in any::<u64>()) {
-        prop_assert!(is_valid_int::<u8, u64>(x));
-        prop_assert!(is_valid_int::<u16, u64>(x));
-        prop_assert!(is_valid_int::<u32, u64>(x));
-        prop_assert!(is_valid_int::<u64, u64>(x));
-        prop_assert!(is_valid_int::<u128, u64>(x));
+        prop_assert!(is_valid_int::<i8, u32>(x));
+        prop_assert!(is_valid_int::<i16, u32>(x));
+        prop_assert!(is_valid_int::<i32, u32>(x));
+        prop_assert!(is_valid_int::<i64, u32>(x));
+        prop_assert!(is_valid_int::<i128, u32>(x));
     }
 
     #[test]
@@ -57,6 +84,12 @@ proptest! {
         prop_assert!(is_valid_int::<u32, u128>(x));
         prop_assert!(is_valid_int::<u64, u128>(x));
         prop_assert!(is_valid_int::<u128, u128>(x));
+
+        prop_assert!(is_valid_int::<i8, u128>(x));
+        prop_assert!(is_valid_int::<i16, u128>(x));
+        prop_assert!(is_valid_int::<i32, u128>(x));
+        prop_assert!(is_valid_int::<i64, u128>(x));
+        prop_assert!(is_valid_int::<i128, u128>(x));
     }
 
     #[test]
@@ -66,6 +99,12 @@ proptest! {
         prop_assert!(is_valid::<u32>(s.as_bytes()));
         prop_assert!(is_valid::<u64>(s.as_bytes()));
         prop_assert!(is_valid::<u128>(s.as_bytes()));
+
+        prop_assert!(is_valid::<i8>(s.as_bytes()));
+        prop_assert!(is_valid::<i16>(s.as_bytes()));
+        prop_assert!(is_valid::<i32>(s.as_bytes()));
+        prop_assert!(is_valid::<i64>(s.as_bytes()));
+        prop_assert!(is_valid::<i128>(s.as_bytes()));
     }
 
     #[test]
@@ -75,5 +114,11 @@ proptest! {
         prop_assert!(is_valid::<u32>(&s));
         prop_assert!(is_valid::<u64>(&s));
         prop_assert!(is_valid::<u128>(&s));
+
+        prop_assert!(is_valid::<i8>(&s));
+        prop_assert!(is_valid::<i16>(&s));
+        prop_assert!(is_valid::<i32>(&s));
+        prop_assert!(is_valid::<i64>(&s));
+        prop_assert!(is_valid::<i128>(&s));
     }
 }

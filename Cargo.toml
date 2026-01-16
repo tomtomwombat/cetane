@@ -4,11 +4,11 @@ version = "0.1.0"
 edition = "2021"
 rust-version = "1.70"
 authors = ["tomtomwombat"]
-description = "Fast integer parser."
+description = "High-performance integer parsing with full std parity."
 license = "MIT OR Apache-2.0"
 homepage = "https://github.com/tomtomwombat/cetane/"
 repository = "https://github.com/tomtomwombat/cetane/"
-keywords = ["integer", "atoi", "parsing", "swar"]
+keywords = ["integer", "atoi", "parsing", "conversion"]
 categories = ["parsing", "encoding", "algorithms"]
 readme = "README.md"
 
