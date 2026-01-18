@@ -54,27 +54,28 @@ fn parse_i32(s: &mut &[u8], is_err: &mut u64, sign: i32) -> i32 {
 }
 
 #[inline]
-fn parse_i64(s: &mut &[u8], is_err: &mut u64, sign: i64) -> i64 {
+fn parse_i64(s: &mut &[u8], err: &mut u64, sign: i64) -> i64 {
     if s.len() == 3 {
-        return sign * parse_3(s, is_err) as i64;
+        return sign * parse_3(s, err) as i64;
     }
     if s.len() == 4 {
-        return sign * parse_4(s, is_err) as i64;
+        return sign * parse_4(s, err) as i64;
     }
     if s.len() == 5 {
-        return sign * parse_5(s, is_err) as i64;
+        return sign * parse_5(s, err) as i64;
     }
     let mut res: u64 = 0;
-    maybe_parse_8(s, is_err, &mut res);
-    maybe_parse_8(s, is_err, &mut res);
-    maybe_parse_4(s, is_err, &mut res);
-    maybe_parse_2(s, is_err, &mut res);
-    maybe_parse_1(s, is_err, &mut res);
-    *is_err |= match sign {
+    if s.len() >= 16 {
+        res = parse_16(s, err);
+    }
+    maybe_parse_8(s, err, &mut res);
+    maybe_parse_4(s, err, &mut res);
+    maybe_parse_2(s, err, &mut res);
+    maybe_parse_1(s, err, &mut res);
+    *err |= match sign {
         -1 => res > 9_223_372_036_854_775_808,
         _ => res > 9_223_372_036_854_775_807,
     } as u64;
-
     let sign_mask = sign >> 63; // 0 or all-ones
     (res as i64 ^ sign_mask).wrapping_add(sign_mask & 1)
 }
@@ -128,7 +129,6 @@ macro_rules! impl_signed_radix_10 {
                 let res = match s.len() {
                     1 => sign * parse_1(&mut s, &mut is_err) as $type,
                     2 => sign * parse_2(&mut s, &mut is_err) as $type,
-                    // 3 if $max_digits > 3 => sign * parse_3(&mut s, &mut is_err) as $type,
                     3..=$max_digits => $parse_n(&mut s, &mut is_err, sign),
                     _ => {
                         strip_leading_zeros(&mut s, $max_digits);

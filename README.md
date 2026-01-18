@@ -1,5 +1,7 @@
 # cetane
-cetane is a high-performance integer and digit parsing library for Rust. It matches the behavior of std parsing while achieving state-of-the-art performance on common inputs. cetane also exposes low-level building blocks for constructing custom numeric parsers. cetane is 1-3x faster than existing Rust parsers.
+[![Github](https://img.shields.io/badge/github-8da0cb?style=for-the-badge&labelColor=555555&logo=github)](https://github.com/tomtomwombat/cetane)
+
+cetane is a SIMD-accelerated integer and digit parsing library for Rust. It matches the behavior of std parsing while achieving state-of-the-art performance on common inputs. cetane also exposes low-level building blocks for constructing custom numeric parsers. cetane is 1-3x faster than existing Rust parsers.
 
 # Usage
 ```rust
@@ -34,6 +36,14 @@ fn my_really_fast_6_digit_parser(mut src: &[u8]) -> Result<u64, ()> {
 assert_eq!(my_really_fast_6_digit_parser(b"123456"), Ok(123456));
 ```
 
+## SIMD Support
+
+Cetane automatically uses SIMD on x86_64 (SSE2) if available. No configuration or feature flags are required. For maximum performance, users may compile with:
+```ignore
+RUSTFLAGS="-C target-cpu=native"
+```
+This is optional and not required for correctness.
+
 # Performance
 Benchmark source and more results: https://github.com/tomtomwombat/atoi-benchmark.
 - Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz (2.59 GHz)
@@ -43,18 +53,19 @@ Benchmark source and more results: https://github.com/tomtomwombat/atoi-benchmar
 <img width="1920" height="967" alt="range" src="https://github.com/user-attachments/assets/dd6ad148-6671-439d-b7b2-2aa07d4c6aa7" />
 
 # Should I Use This?
-Yes. cetane's behavior is of 1-1 parity with std. At worst, cetane matches the performance of the next fastest parser. At best (for larger inputs) cetane is 2-3x faster. cetane is extensivly tested:
+Yes. cetane's behavior is of 1-1 parity with std. At worst, cetane matches the performance of the next fastest parser. At best (for larger inputs) cetane is 2-3x faster. cetane is extensively tested:
 - exhaustive testing for correct inputs
-- exhaustive testing for all 4-byte combinations at different alignements
+- exhaustive testing for all 4-byte combinations at different alignments
 - miri for undefined behavior
 - extensive property testing
 
 # To Do
-Below are some ideas for future functionality. Create an issue if you have a use-case for any.
+Below are some ideas for features. Create an issue if you have a use-case for any.
 - General radix
 - Unchecked parsing
 - Parsing aligned data
 - Parsing buffered data (i.e. input has trailing buffer)
+- AVX support
 
 # How it works
 This crate is an extension of the 8-bit int parser explained in https://lemire.me/blog/2023/11/28/parsing-8-bit-integers-quickly/. The algorithm adds divide and conquer to Lemire's SWAR (SIMD within a register) techniques to parse varying width unsigned integers from decimal bytes. 
@@ -83,7 +94,7 @@ fn parse_4(s: &mut &[u8], is_err: &mut u64) -> u64 {
 let mut u = unsafe { ptr::read_unaligned(s.as_ptr() as *const u32) };
 *s = &s[4..];
 ```
-Read 4 bytes of `s` into a litte endian `u32`, `u`, and advance the `s` pointer by 4. The first byte in `s` is the least significant byte in `u`.
+Read 4 bytes of `s` into a little endian `u32`, `u`, and advance the `s` pointer by 4. The first byte in `s` is the least significant byte in `u`.
 
 ```ignore
 s:
@@ -129,7 +140,7 @@ First, adding 6 to all bytes moves valid all bytes to the 6-15 (00000110 - 00001
 00001000 00001011 00001110 00001101
 ```
 
-ORing with the decimal representation ensures that any orginal bits outside of the 15 range get put back (and don't disapear from the wrapping add).
+ORing with the decimal representation ensures that any original bits outside of the 15 range get put back (and don't disappear from the wrapping add).
 ```ignore
 00000010 00000101 00001000 00000111
 |
@@ -153,7 +164,7 @@ This information is folded into `is_err`, which is != 0 if any byte is not a val
 u = (u.wrapping_mul(10 << 8 | 1) >> 8) & 0xff00ff;
 u = u.wrapping_mul(100 << 16 | 1) >> 16;
 ```
-We have the digits, but they are seperated in their own byte buckets.
+We have the digits, but they are separated in their own byte buckets.
 
 Our number can be expressed as `1000 * d3 + 100 * d2 + 10 * d1 + d0`. In our example `d3 = 7, d2 = 8, d1 = 8, d0 = 2`. This can be expressed as `100 * (10 * d3 + d2) + 1 * (10 * d1 + d0)`.
 
@@ -229,3 +240,25 @@ u = (u.wrapping_mul(100 << 16 | 1) >> 16) & 0x0000ffff0000ffff0000ffff0000ffff;
 u = (u.wrapping_mul(10000 << 32 | 1) >> 32) & 0x00000000ffffffff00000000ffffffff;
 u = u.wrapping_mul(100000000 << 64 | 1) >> 64;
 ```
+
+# References
+- https://lemire.me/blog/2023/11/28/parsing-8-bit-integers-quickly/
+- https://lemire.me/blog/2018/10/03/quickly-parsing-eight-digits/
+- https://github.com/WojciechMula/toys/blob/master/conv_from_dec/parse.ssse3.cpp
+
+## License
+
+Licensed under either of
+
+ * Apache License, Version 2.0
+   ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
+ * MIT license
+   ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
+
+at your option.
+
+## Contribution
+
+Unless you explicitly state otherwise, any contribution intentionally submitted
+for inclusion in the work by you, as defined in the Apache-2.0 license, shall be
+dual licensed as above, without any additional terms or conditions.
