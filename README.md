@@ -46,11 +46,14 @@ This is optional and not required for correctness.
 
 # Performance
 Benchmark source and more results: https://github.com/tomtomwombat/atoi-benchmark.
-- Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz (2.59 GHz)
+- AMD Ryzen 9 5900X 12-Core Processor             (3.70 GHz)
 - 64-bit operating system, x64-based processor
-<img width="1920" height="967" alt="exact" src="https://github.com/user-attachments/assets/221e0898-e0bc-4cfc-b516-7ea8a482a59e" />
 
-<img width="1920" height="967" alt="range" src="https://github.com/user-attachments/assets/dd6ad148-6671-439d-b7b2-2aa07d4c6aa7" />
+<img width="1920" height="967" alt="u64parse1n" src="https://github.com/user-attachments/assets/5cf8bf90-6538-4b2c-b0a9-91332cf82302" />
+<img width="1920" height="967" alt="u64parsen" src="https://github.com/user-attachments/assets/8131cc6d-c26f-42de-bc5b-f959d00855e2" />
+<img width="1920" height="967" alt="i64parse1n" src="https://github.com/user-attachments/assets/5ee4beba-6af7-4f6f-9f82-cf8d0fc845a0" />
+<img width="1920" height="967" alt="i64parsen" src="https://github.com/user-attachments/assets/e3945c3d-7c0b-45a4-b6e2-893edbf9ccf6" />
+
 
 # Should I Use This?
 Yes. cetane's behavior is of 1-1 parity with std. At worst, cetane matches the performance of the next fastest parser. At best (for larger inputs) cetane is 2-3x faster. cetane is extensively tested:
