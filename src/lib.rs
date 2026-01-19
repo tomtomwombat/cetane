@@ -8,18 +8,18 @@ pub use crate::core::*;
 mod signed;
 mod unsigned;
 
-#[cfg(target_arch = "x86_64")]
+#[cfg(all(target_arch = "x86_64", not(miri)))]
 mod simd;
 
-#[cfg(target_arch = "x86_64")]
+#[cfg(all(target_arch = "x86_64", not(miri)))]
 mod imp {
     pub(crate) use crate::simd::parse_16;
 }
 
-#[cfg(not(target_arch = "x86_64"))]
+#[cfg(any(not(target_arch = "x86_64"), miri))]
 mod fallback;
 
-#[cfg(not(target_arch = "x86_64"))]
+#[cfg(any(not(target_arch = "x86_64"), miri))]
 mod imp {
     pub(crate) use crate::fallback::parse_16;
 }

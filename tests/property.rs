@@ -26,7 +26,7 @@ fn proptest_config() -> ProptestConfig {
 
 #[cfg(not(miri))]
 fn proptest_config() -> ProptestConfig {
-    ProptestConfig::with_cases(65536 << 4)
+    ProptestConfig::with_cases(65536 << 6)
 }
 
 proptest! {
