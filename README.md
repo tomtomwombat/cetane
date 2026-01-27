@@ -1,7 +1,7 @@
 # rip-atoi
 [![Github](https://img.shields.io/badge/github-8da0cb?style=for-the-badge&labelColor=555555&logo=github)](https://github.com/tomtomwombat/rip-atoi)
 
-rip_atoi (Rapid Integer Parser) is a SIMD-accelerated integer and digit parsing library for Rust. It matches the behavior of std parsing while achieving state-of-the-art performance on common inputs. rip-atoi also exposes low-level building blocks for constructing custom numeric parsers. rip-atoi is up to 3x faster than existing Rust parsers and particularly excels at unpredictable length inputs.
+rip-atoi (Rapid Integer Parser) is a SIMD-accelerated integer and digit parsing library for Rust. It matches the behavior of std parsing while achieving state-of-the-art performance on common inputs. rip-atoi also exposes low-level building blocks for constructing custom numeric parsers. rip-atoi is up to 3x faster than existing Rust parsers and particularly excels at unpredictable length inputs.
 
 # Usage
 ```rust

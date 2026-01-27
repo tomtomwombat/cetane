@@ -1,7 +1,7 @@
 mod common;
 use common::*;
 
-use cetane::*;
+use rip_atoi::*;
 
 use std::cmp::PartialEq;
 use std::fmt::Debug;
