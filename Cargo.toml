@@ -2,7 +2,7 @@
 name = "rip-atoi"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.70"
+rust-version = "1.60"
 authors = ["tomtomwombat"]
 description = "SIMD-accelerated integer and digit parser."
 license = "MIT OR Apache-2.0"
