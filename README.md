@@ -42,7 +42,7 @@ rip-atoi automatically uses SIMD on x86_64 (SSE2) if available. No configuration
 ```ignore
 RUSTFLAGS="-C target-cpu=native"
 ```
-This is optional and not required for correctness.
+This is optional and not required for correctness. If SIMD support is not detected, a fallback is automatically used instead.
 
 # Performance
 Benchmark source and more results: https://github.com/tomtomwombat/atoi-benchmark.
@@ -70,7 +70,7 @@ Below are some ideas for features. Create an issue if you have a use-case for an
 - Unchecked parsing
 - Parsing aligned data
 - Parsing buffered data (i.e. input has trailing buffer)
-- AVX support
+- AVX and NEON support
 
 # References
 - https://lemire.me/blog/2023/11/28/parsing-8-bit-integers-quickly/
