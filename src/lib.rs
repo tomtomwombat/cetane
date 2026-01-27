@@ -5,24 +5,12 @@
 
 mod core;
 pub use crate::core::*;
+mod fallback;
 mod signed;
 mod unsigned;
 
 #[cfg(all(target_arch = "x86_64", not(miri)))]
 mod simd;
-
-#[cfg(all(target_arch = "x86_64", not(miri)))]
-mod imp {
-    pub(crate) use crate::simd::parse_16;
-}
-
-#[cfg(any(not(target_arch = "x86_64"), miri))]
-mod fallback;
-
-#[cfg(any(not(target_arch = "x86_64"), miri))]
-mod imp {
-    pub(crate) use crate::fallback::parse_16;
-}
 
 pub trait FromRadix10Checked {
     fn from_radix_10_checked(_: &[u8]) -> Result<Self, ()>

@@ -198,5 +198,14 @@ pub(crate) fn parse_up_to_38(s: &mut &[u8], err: &mut u64) -> u128 {
 /// If there's an error, `is_err` is set to a non-zero value.
 #[inline(always)]
 pub fn parse_16(s: &mut &[u8], err: &mut u64) -> u64 {
-    crate::imp::parse_16(s, err)
+    #[cfg(all(target_arch = "x86_64", not(miri)))]
+    {
+        if std::is_x86_feature_detected!("sse4.1") {
+            unsafe {
+                return crate::simd::parse_16(s, err);
+            }
+        }
+    }
+
+    crate::fallback::parse_16(s, err)
 }
