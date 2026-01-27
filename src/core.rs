@@ -21,7 +21,7 @@ macro_rules! impl_read {
         fn $func_name(s: &mut &[u8]) -> $t {
             let size = core::mem::size_of::<$t>();
             debug_assert!(s.len() >= size);
-            let u = unsafe { core::ptr::read_unaligned(s.as_ptr() as *const $t) };
+            let u = <$t>::from_le_bytes(s[..size].try_into().unwrap());
             *s = &s[size..];
             <$t>::from_le(u)
         }
