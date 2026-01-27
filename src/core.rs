@@ -196,14 +196,27 @@ pub(crate) fn parse_up_to_38(s: &mut &[u8], err: &mut u64) -> u128 {
 
 /// Parses exactly 16 bytes into the `u128`.
 /// If there's an error, `is_err` is set to a non-zero value.
+#[allow(unreachable_code)]
 #[inline(always)]
 pub fn parse_16(s: &mut &[u8], err: &mut u64) -> u64 {
-    #[cfg(all(target_arch = "x86_64", not(miri)))]
+    #[cfg(all(feature = "std", target_arch = "x86_64", not(miri)))]
     {
         if std::is_x86_feature_detected!("sse4.1") {
             unsafe {
                 return crate::simd::parse_16(s, err);
             }
+        }
+    }
+
+    #[cfg(all(
+        not(feature = "std"),
+        feature = "sse41",
+        target_arch = "x86_64",
+        not(miri)
+    ))]
+    {
+        unsafe {
+            return crate::simd::parse_16(s, err);
         }
     }
 

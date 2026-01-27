@@ -18,6 +18,7 @@ maintenance = { status = "actively-developed" }
 [features]
 default = ["std"]
 std = []
+sse41 = []
 
 [dependencies]
 

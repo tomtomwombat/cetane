@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use crate::core::{fold_8, parse_8};
 
 #[inline]

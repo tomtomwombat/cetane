@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use core::arch::x86_64::*;
 
 #[target_feature(enable = "sse4.1")]
