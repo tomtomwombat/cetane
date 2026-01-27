@@ -1,11 +1,11 @@
-# cetane
-[![Github](https://img.shields.io/badge/github-8da0cb?style=for-the-badge&labelColor=555555&logo=github)](https://github.com/tomtomwombat/cetane)
+# rip-atoi
+[![Github](https://img.shields.io/badge/github-8da0cb?style=for-the-badge&labelColor=555555&logo=github)](https://github.com/tomtomwombat/rip-atoi)
 
-cetane is a SIMD-accelerated integer and digit parsing library for Rust. It matches the behavior of std parsing while achieving state-of-the-art performance on common inputs. cetane also exposes low-level building blocks for constructing custom numeric parsers. cetane is up to 3x faster than existing Rust parsers and particularly excels at unpredictable length inputs.
+rip_atoi (Rapid Integer Parser) is a SIMD-accelerated integer and digit parsing library for Rust. It matches the behavior of std parsing while achieving state-of-the-art performance on common inputs. rip-atoi also exposes low-level building blocks for constructing custom numeric parsers. rip-atoi is up to 3x faster than existing Rust parsers and particularly excels at unpredictable length inputs.
 
 # Usage
 ```rust
-use cetane::*;
+use rip_atoi::*;
 
 let _ = atoi::<u64>(b"42").unwrap();
 let _ = atoi::<i8>(b"-42").unwrap();
@@ -20,7 +20,7 @@ let _: u64 = "42".parse_radix10().unwrap();
 let _: u64 = b"42".parse_radix10().unwrap();
 ```
 ```rust
-use cetane::{parse_4, parse_2};
+use rip_atoi::{parse_4, parse_2};
 
 fn my_really_fast_6_digit_parser(mut src: &[u8]) -> Result<u64, ()> {
       assert_eq!(src.len(), 6);
@@ -38,7 +38,7 @@ assert_eq!(my_really_fast_6_digit_parser(b"123456"), Ok(123456));
 
 ## SIMD Support
 
-Cetane automatically uses SIMD on x86_64 (SSE2) if available. No configuration or feature flags are required. For maximum performance, users may compile with:
+rip-atoi automatically uses SIMD on x86_64 (SSE2) if available. No configuration or feature flags are required. For maximum performance, users may compile with:
 ```ignore
 RUSTFLAGS="-C target-cpu=native"
 ```
@@ -56,7 +56,7 @@ Benchmark source and more results: https://github.com/tomtomwombat/atoi-benchmar
 
 
 # Should I Use This?
-Yes. cetane's behavior is of 1-1 parity with std. At worst, cetane matches the performance of the next fastest parser. At best (for larger inputs) cetane is 2-3x faster. cetane is extensively tested:
+Yes. rip-atoi's behavior is of 1-1 parity with std. At worst, rip-atoi matches the performance of the next fastest parser. At best (for larger inputs) rip-atoi is 2-3x faster. rip-atoi is extensively tested:
 - exhaustive testing for correct inputs
 - exhaustive testing for all 4-byte combinations at different alignments
 - no unsafe code (except for SIMD)
