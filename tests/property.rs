@@ -1,7 +1,7 @@
 use proptest::prelude::*;
 mod common;
 use common::*;
-use rip_atoi::*;
+use fast_atoi::*;
 
 fn is_valid_int<I: FromRadix10Checked, V: itoa::Integer>(x: V) -> bool {
     let mut buffer = itoa::Buffer::new();
