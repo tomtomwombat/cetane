@@ -49,10 +49,11 @@ Benchmark source and more results: https://github.com/tomtomwombat/atoi-benchmar
 - AMD Ryzen 9 5900X 12-Core Processor             (3.70 GHz)
 - 64-bit operating system, x64-based processor
 
-<img width="1920" height="967" alt="u64parsen" src="https://github.com/user-attachments/assets/125158d4-abc9-4f74-9b33-6d184285c596" />
-<img width="1920" height="967" alt="u64parse1n" src="https://github.com/user-attachments/assets/ab98e5a5-e09d-49c1-98fe-f80aaa077049" />
-<img width="1920" height="967" alt="i64parsen" src="https://github.com/user-attachments/assets/a07525ff-0c81-467d-a64a-bee2bfa93e6a" />
-<img width="1920" height="967" alt="i64parse1n" src="https://github.com/user-attachments/assets/f77cd270-8afc-44c2-b37a-92a0a755cd1d" />
+<img width="1920" height="967" alt="u64parsen" src="https://github.com/user-attachments/assets/8e95aaea-e4ef-4296-9108-2ffe453c7bd8" />
+<img width="1920" height="967" alt="u64parse1n" src="https://github.com/user-attachments/assets/708956c2-5d4b-4ef0-aa5d-65f30b8526ce" />
+<img width="1920" height="967" alt="i64parsen" src="https://github.com/user-attachments/assets/54a70214-1af4-4f31-b807-4ca3be74b19d" />
+<img width="1920" height="967" alt="i64parse1n" src="https://github.com/user-attachments/assets/0a0d34a0-d01d-4a9a-aeec-493cac2b9b0b" />
+
 
 
 # Should I Use This?
